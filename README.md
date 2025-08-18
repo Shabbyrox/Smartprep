@@ -10,6 +10,31 @@
 This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
 Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
 
+# Smartprep Backend Setup
+
+## 1. Create and activate virtual environment
+
+```
+python -m venv env
+source env/Scripts/activate  # On Windows (bash)
+# Or use: . env/Scripts/activate
+```
+
+## 2. Install dependencies
+
+```
+pip install -r requirements.txt
+```
+
+## 3. Run the FastAPI server
+
+```
+python server.py
+```
+
+The server will start at http://localhost:8000/
+
+
 ## Deployment
 
 Your project is live at:
