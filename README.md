@@ -16,8 +16,7 @@ Any changes you make to your deployed app will be automatically pushed to this r
 
 ```
 python -m venv env
-source env/Scripts/activate  # On Windows (bash)
-# Or use: . env/Scripts/activate
+.env/Scripts/activate
 ```
 
 ## 2. Install dependencies
