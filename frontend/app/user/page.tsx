@@ -93,7 +93,7 @@ export default function UserDashboard() {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, John!</h1>
-          <p className="text-gray-600">Track your progress and continue your job preparation journey</p>
+          <p className="text-gray-600">Track your progress and continue your job preparation journey hi </p>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
