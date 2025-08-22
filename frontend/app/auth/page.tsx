@@ -28,7 +28,7 @@ export default function AuthPage() {
     // Route based on selected role
     switch (selectedRole) {
       case "user":
-        router.push("/dashboard/user")
+        router.push("/user")
         break
       case "admin":
         router.push("/dashboard/admin")
