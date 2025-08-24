@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import dynamic from 'next/dynamic'; // Import dynamic for client-side loading
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -8,12 +9,23 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Download, FileText, User, Briefcase, GraduationCap, Award, Code } from "lucide-react"
 
+const PDFDownloadWrapper = dynamic(
+  () => import('@/components/ResumePDF'),
+  { 
+    ssr: false, // THIS IS CRITICAL
+    // 💡 FIX: Return null or simple text during the loading/SSR skip phase
+    loading: () => null, // or loading: () => <p>Loading PDF...</p>
+  } 
+);
+
 interface ResumeData {
   personalInfo: {
     fullName: string
-    email: string
     phone: string
+    email: string
     location: string
+    linkedin?: string
+    github?: string
     summary: string
   }
   experience: Array<{
@@ -27,6 +39,8 @@ interface ResumeData {
     id: string
     school: string
     degree: string
+    location: string
+    gpa: string
     year: string
   }>
   projects: Array<{
@@ -37,21 +51,31 @@ interface ResumeData {
     link: string
   }>
   skills: string[]
+
+  certifications: Array<{
+    id: string
+    name: string
+    description: string 
+  }>
+
 }
 
 export default function ResumeBuilder() {
   const [resumeData, setResumeData] = useState<ResumeData>({
     personalInfo: {
       fullName: "",
-      email: "",
       phone: "",
+      email: "",
       location: "",
+      linkedin: "",
+      github: "",
       summary: "",
     },
     experience: [{ id: "1", company: "", position: "", duration: "", description: "" }],
-    education: [{ id: "1", school: "", degree: "", year: "" }],
+    education: [{ id: "1", school: "", degree: "", year: "", location: "", gpa: "" }],
     projects: [{ id: "1", name: "", description: "", technologies: "", link: "" }],
     skills: [""],
+    certifications: [{ id: "1", name: "", description: "" }],
   })
 
   const updatePersonalInfo = (field: keyof ResumeData["personalInfo"], value: string) => {
@@ -101,6 +125,8 @@ export default function ResumeBuilder() {
           school: "",
           degree: "",
           year: "",
+          location: "",
+          gpa: "",
         },
       ],
     }))
@@ -143,52 +169,35 @@ export default function ResumeBuilder() {
     }))
   }
 
-  const downloadPDF = async () => {
-    const element = document.getElementById("resume-preview")
-    if (!element) return
-
-    try {
-      // Dynamic import to avoid SSR issues
-      const html2canvas = (await import("html2canvas")).default
-      const jsPDF = (await import("jspdf")).jsPDF
-
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-      })
-
-      const imgData = canvas.toDataURL("image/png")
-      const pdf = new jsPDF("p", "mm", "a4")
-
-      const imgWidth = 210
-      const pageHeight = 295
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
-      let heightLeft = imgHeight
-
-      let position = 0
-
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight)
-      heightLeft -= pageHeight
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight
-        pdf.addPage()
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight)
-        heightLeft -= pageHeight
-      }
-
-      const fileName = resumeData.personalInfo.fullName
-        ? `${resumeData.personalInfo.fullName.replace(/\s+/g, "_")}_Resume.pdf`
-        : "Resume.pdf"
-
-      pdf.save(fileName)
-    } catch (error) {
-      console.error("Error generating PDF:", error)
-      alert("Error generating PDF. Please try again.")
-    }
+  const updateCertification = (id: string, field: string, value: string) => {
+    setResumeData((prev) => ({
+      ...prev,
+      certifications: prev.certifications.map((cert) => (cert.id === id ? { ...cert, [field]: value } : cert)),
+    }))
   }
+
+  const addCertification = () => {
+    setResumeData((prev) => ({
+      ...prev,
+      certifications: [
+        ...prev.certifications,
+        {
+          id: Date.now().toString(),
+          name: "",
+          description: "",
+        },
+      ],
+    }))
+  }
+
+  const textToList = (text: string) => {
+    if (!text) return []
+    // Split the text by newline, filter out empty lines, and trim whitespace
+    return text.split('\n').filter(line => line.trim() !== '').map(line => line.trim());
+  }
+
+  // NOTE: The original downloadPDF function is removed, 
+  // as the new PDFDownloadWrapper handles the download logic.
 
   return (
     <div className="min-h-screen bg-background">
@@ -225,6 +234,15 @@ export default function ResumeBuilder() {
                     />
                   </div>
                   <div>
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      value={resumeData.personalInfo.phone}
+                      onChange={(e) => updatePersonalInfo("phone", e.target.value)}
+                      placeholder="+91 1234567891"
+                    />
+                  </div>
+                  <div>
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
@@ -235,12 +253,21 @@ export default function ResumeBuilder() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="phone">Phone</Label>
+                    <Label htmlFor="linkedin">LinkedIn</Label>
                     <Input
-                      id="phone"
-                      value={resumeData.personalInfo.phone}
-                      onChange={(e) => updatePersonalInfo("phone", e.target.value)}
-                      placeholder="+1 (555) 123-4567"
+                      id="linkedin"
+                      value={resumeData.personalInfo.linkedin}
+                      onChange={(e) => updatePersonalInfo("linkedin", e.target.value)}
+                      placeholder="linkedin.com/in/johndoe"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="github">GitHub</Label>
+                    <Input
+                      id="github"
+                      value={resumeData.personalInfo.github}
+                      onChange={(e) => updatePersonalInfo("github", e.target.value)}
+                      placeholder="github.com/johndoe"
                     />
                   </div>
                   <div>
@@ -373,6 +400,42 @@ export default function ResumeBuilder() {
                 </Button>
               </CardContent>
             </Card>
+            
+            {/* Certifications / Achievements */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5 text-primary" />
+                  Certifications / Achievements
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {resumeData.certifications.map((cert) => (
+                  <div key={cert.id} className="space-y-3 p-4 border border-border rounded-lg">
+                    <div>
+                      <Label>Name</Label>
+                      <Input
+                        value={cert.name}
+                        onChange={(e) => updateCertification(cert.id, "name", e.target.value)}
+                        placeholder="AWS Certified Developer- Certifictate / Event Name- Achievement"
+                      />
+                    </div>
+                    <div>
+                      <Label>Description (one achievement per line)</Label>
+                      <Textarea
+                        value={cert.description}
+                        onChange={(e) => updateCertification(cert.id, "description", e.target.value)}
+                        placeholder="Satrt from new line for a new point (Press enter), Issued by AWS, August 2023 - Certificate / Selected for (Hackathon/Event) Regionals;Winner of the Annual Hackathon (2024) - Achievement"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                ))}
+                <Button onClick={addCertification} variant="outline" className="w-full bg-transparent">
+                  Add Certification / Achievement
+                </Button>
+              </CardContent>
+            </Card>
 
             {/* Education */}
             <Card>
@@ -399,18 +462,35 @@ export default function ResumeBuilder() {
                         <Input
                           value={edu.degree}
                           onChange={(e) => updateEducation(edu.id, "degree", e.target.value)}
-                          placeholder="Bachelor of Science"
+                          placeholder="Bachelor of Technology in Information Technology"
                         />
                       </div>
+                    </div>
+                    <div>
+                      <Label>Location</Label>
+                      <Input
+                        value={edu.location}
+                        onChange={(e) => updateEducation(edu.id, "location", e.target.value)}
+                        placeholder="City, Country"
+                      />
+                    </div>
+                    <div> 
+                      <Label>GPA</Label>
+                      <Input
+                        value={edu.gpa}
+                        onChange={(e) => updateEducation(edu.id, "gpa", e.target.value)}
+                        placeholder="8.93"
+                      />
                     </div>
                     <div>
                       <Label>Year</Label>
                       <Input
                         value={edu.year}
                         onChange={(e) => updateEducation(edu.id, "year", e.target.value)}
-                        placeholder="2020"
+                        placeholder="Aug 2020"
                       />
                     </div>
+                    
                   </div>
                 ))}
                 <Button onClick={addEducation} variant="outline" className="w-full bg-transparent">
@@ -448,29 +528,44 @@ export default function ResumeBuilder() {
             <Card className="h-fit">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Resume Preview</CardTitle>
-                <Button size="sm" className="gap-2" onClick={downloadPDF}>
-                  <Download className="h-4 w-4" />
-                  Download PDF
-                </Button>
+                
+                {/* 🚨 NEW: Use the dynamically imported PDFDownloadWrapper */}
+                <PDFDownloadWrapper resumeData={resumeData}>
+                  <Button size="sm" className="gap-2">
+                    <Download className="h-4 w-4" />
+                    Download PDF
+                  </Button>
+                </PDFDownloadWrapper>
               </CardHeader>
               <CardContent>
-                <div id="resume-preview" className="bg-white text-black p-8 rounded-lg border shadow-sm min-h-[800px]">
+                {/* NOTE: You should remove the 'id="resume-preview"' and 'min-h-[800px]' 
+                   since the download functionality no longer relies on it, but I'll 
+                   leave it here for the HTML preview logic to remain functional. 
+                   The old downloadPDF function is now useless.
+                */}
+                <div id="resume-preview" className="bg-white text-black p-6 rounded-lg border shadow-sm min-h-[800px]">
                   {/* Header */}
-                  <div className="text-center mb-6">
+                  <div className="text-center mb-4">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">
                       {resumeData.personalInfo.fullName || "Your Name"}
                     </h1>
-                    <div className="text-gray-600 space-y-1">
-                      {resumeData.personalInfo.email && <p>{resumeData.personalInfo.email}</p>}
-                      {resumeData.personalInfo.phone && <p>{resumeData.personalInfo.phone}</p>}
-                      {resumeData.personalInfo.location && <p>{resumeData.personalInfo.location}</p>}
+                    <div className="text-gray-600 flex flex-wrap justify-center items-center text-sm">
+                        <p>{resumeData.personalInfo.phone}</p>
+                        {resumeData.personalInfo.email && <p className="mx-2"> | </p>}
+                        <p>{resumeData.personalInfo.email}</p>
+                        {resumeData.personalInfo.linkedin && <p className="mx-2"> | </p>}
+                        <a href={`https://${resumeData.personalInfo.linkedin}`} target="_blank" className="hover:underline">{resumeData.personalInfo.linkedin}</a>
+                        {resumeData.personalInfo.github && <p className="mx-2"> | </p>}
+                        <a href={`https://${resumeData.personalInfo.github}`} target="_blank" className="hover:underline">{resumeData.personalInfo.github}</a>
+                        {resumeData.personalInfo.location && <p className="mx-2"> | </p>}
+                        <p>{resumeData.personalInfo.location}</p>
                     </div>
                   </div>
 
                   {/* Summary */}
                   {resumeData.personalInfo.summary && (
-                    <div className="mb-6">
-                      <h2 className="text-xl font-semibold text-gray-900 mb-3 border-b border-gray-300 pb-1">
+                    <div className="mb-4">
+                      <h2 className="text-lg font-bold text-gray-900 mb-2 border-b-2 border-gray-900 pb-0.5 uppercase tracking-wider">
                         Professional Summary
                       </h2>
                       <p className="text-gray-700 leading-relaxed">{resumeData.personalInfo.summary}</p>
@@ -479,16 +574,16 @@ export default function ResumeBuilder() {
 
                   {/* Experience */}
                   {resumeData.experience.some((exp) => exp.company || exp.position) && (
-                    <div className="mb-6">
-                      <h2 className="text-xl font-semibold text-gray-900 mb-3 border-b border-gray-300 pb-1">
+                    <div className="mb-4">
+                      <h2 className="text-lg font-bold text-gray-900 mb-2 border-b-2 border-gray-900 pb-0.5 uppercase tracking-wider">
                         Work Experience
                       </h2>
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         {resumeData.experience.map(
                           (exp) =>
                             (exp.company || exp.position) && (
                               <div key={exp.id}>
-                                <div className="flex justify-between items-start mb-2">
+                                <div className="flex justify-between items-start mb-1">
                                   <div>
                                     <h3 className="font-semibold text-gray-900">{exp.position || "Position"}</h3>
                                     <p className="text-gray-700">{exp.company || "Company"}</p>
@@ -496,7 +591,11 @@ export default function ResumeBuilder() {
                                   <span className="text-gray-600 text-sm">{exp.duration || "Duration"}</span>
                                 </div>
                                 {exp.description && (
-                                  <p className="text-gray-700 text-sm leading-relaxed">{exp.description}</p>
+                                  <ul className="list-disc ml-4 text-gray-700 text-sm space-y-0.5">
+                                  {textToList(exp.description).map((line, i) => (
+                                    <li key={i}>{line}</li>
+                                  ))}
+                                </ul>
                                 )}
                               </div>
                             ),
@@ -507,16 +606,16 @@ export default function ResumeBuilder() {
 
                   {/* Projects */}
                   {resumeData.projects.some((project) => project.name || project.description) && (
-                    <div className="mb-6">
-                      <h2 className="text-xl font-semibold text-gray-900 mb-3 border-b border-gray-300 pb-1">
+                    <div className="mb-4">
+                      <h2 className="text-lg font-bold text-gray-900 mb-2 border-b-2 border-gray-900 pb-0.5 uppercase tracking-wider">
                         Projects
                       </h2>
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         {resumeData.projects.map(
                           (project) =>
                             (project.name || project.description) && (
                               <div key={project.id}>
-                                <div className="flex justify-between items-start mb-2">
+                                <div className="flex justify-between items-start mb-1">
                                   <div>
                                     <h3 className="font-semibold text-gray-900">{project.name || "Project Name"}</h3>
                                     {project.technologies && (
@@ -535,7 +634,37 @@ export default function ResumeBuilder() {
                                   )}
                                 </div>
                                 {project.description && (
-                                  <p className="text-gray-700 text-sm leading-relaxed">{project.description}</p>
+                                  <ul className="list-disc ml-4 text-gray-700 text-sm space-y-0.5">
+                                  {textToList(project.description).map((line, i) => (
+                                    <li key={i}>{line}</li>
+                                  ))}
+                                </ul>
+                                )}
+                              </div>
+                            ),
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Certifications / Achievements */}
+                  {resumeData.certifications.some((cert) => cert.name || cert.description) && (
+                    <div className="mb-4">
+                      <h2 className="text-lg font-bold text-gray-900 mb-2 border-b-2 border-gray-900 pb-0.5 uppercase tracking-wider">
+                        Certifications & Achievements
+                      </h2>
+                      <div className="space-y-3">
+                        {resumeData.certifications.map(
+                          (cert) =>
+                            (cert.name || cert.description) && (
+                              <div key={cert.id} className="mb-2">
+                                <h3 className="font-semibold text-gray-900">{cert.name || "Certification/Achievement"}</h3>
+                                {cert.description && (
+                                  <ul className="list-disc ml-4 text-gray-700 text-sm space-y-0.5">
+                                    {textToList(cert.description).map((line, i) => (
+                                      <li key={i}>{line}</li>
+                                    ))}
+                                  </ul>
                                 )}
                               </div>
                             ),
@@ -546,11 +675,11 @@ export default function ResumeBuilder() {
 
                   {/* Education */}
                   {resumeData.education.some((edu) => edu.school || edu.degree) && (
-                    <div className="mb-6">
-                      <h2 className="text-xl font-semibold text-gray-900 mb-3 border-b border-gray-300 pb-1">
+                    <div className="mb-4">
+                      <h2 className="text-lg font-bold text-gray-900 mb-2 border-b-2 border-gray-900 pb-0.5 uppercase tracking-wider">
                         Education
                       </h2>
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         {resumeData.education.map(
                           (edu) =>
                             (edu.school || edu.degree) && (
@@ -558,6 +687,8 @@ export default function ResumeBuilder() {
                                 <div>
                                   <h3 className="font-semibold text-gray-900">{edu.degree || "Degree"}</h3>
                                   <p className="text-gray-700">{edu.school || "School"}</p>
+                                  {edu.location && <p className="text-gray-600 text-sm">{edu.location}</p>}
+                                  {edu.gpa && <p className="text-gray-600 text-sm">GPA: {edu.gpa}</p>}
                                 </div>
                                 <span className="text-gray-600 text-sm">{edu.year || "Year"}</span>
                               </div>
@@ -569,16 +700,11 @@ export default function ResumeBuilder() {
 
                   {/* Skills */}
                   {resumeData.skills.some((skill) => skill.trim()) && (
-                    <div className="mb-6">
-                      <h2 className="text-xl font-semibold text-gray-900 mb-3 border-b border-gray-300 pb-1">Skills</h2>
-                      <div className="flex flex-wrap gap-2">
-                        {resumeData.skills
-                          .filter((skill) => skill.trim())
-                          .map((skill, index) => (
-                            <span key={index} className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
-                              {skill}
-                            </span>
-                          ))}
+                    <div className="mb-4">
+                      <h2 className="text-lg font-bold text-gray-900 mb-2 border-b-2 border-gray-900 pb-0.5 uppercase tracking-wider"></h2>
+                      <div className="text-gray-700 text-sm leading-relaxed">
+                        {/* Join skills with a separator */}
+                        {resumeData.skills.filter((skill) => skill.trim()).join(' • ')}
                       </div>
                     </div>
                   )}
