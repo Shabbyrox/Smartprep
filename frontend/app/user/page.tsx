@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Upload, FileText, MessageSquare, Brain, CheckCircle, AlertCircle, Target } from "lucide-react"
 import { UserNavbar } from "@/components/user-navbar"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts"
+import Link from "next/Link";
 
 const skillsData = [
   { skill: "JavaScript", score: 85 },
@@ -92,7 +93,7 @@ export default function UserDashboard() {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, John!</h1>
-          <p className="text-gray-600">Track your progress and continue your job preparation journey</p>
+          <p className="text-gray-600">Track your progress and continue your job preparation journey hi </p>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
@@ -250,6 +251,11 @@ export default function UserDashboard() {
                   )}
                 </CardContent>
               </Card>
+            </div>
+            <div>
+              <Link href="/resumeEdit">
+              <Button>Click to create new resume</Button>
+              </Link>
             </div>
           </TabsContent>
 
