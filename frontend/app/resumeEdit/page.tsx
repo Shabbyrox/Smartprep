@@ -276,12 +276,12 @@ export default function ResumeBuilder() {
                       id="location"
                       value={resumeData.personalInfo.location}
                       onChange={(e) => updatePersonalInfo("location", e.target.value)}
-                      placeholder="New York, NY"
+                      placeholder="Mumbai, India"
                     />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="summary">Professional Summary</Label>
+                  <Label htmlFor="summary">Career Objective</Label>
                   <Textarea
                     id="summary"
                     value={resumeData.personalInfo.summary}
@@ -417,7 +417,7 @@ export default function ResumeBuilder() {
                       <Input
                         value={cert.name}
                         onChange={(e) => updateCertification(cert.id, "name", e.target.value)}
-                        placeholder="AWS Certified Developer- Certifictate / Event Name- Achievement"
+                        placeholder="AWS Certified Developer - Associate or 'Best Mobile App' at HackTX"
                       />
                     </div>
                     <div>
@@ -425,7 +425,7 @@ export default function ResumeBuilder() {
                       <Textarea
                         value={cert.description}
                         onChange={(e) => updateCertification(cert.id, "description", e.target.value)}
-                        placeholder="Satrt from new line for a new point (Press enter), Issued by AWS, August 2023 - Certificate / Selected for (Hackathon/Event) Regionals;Winner of the Annual Hackathon (2024) - Achievement"
+                        placeholder="Start from new line for a new point (Press enter), Issued by AWS, August 2023 - Certificate / Selected for (Hackathon/Event) Regionals;Winner of the Annual Hackathon (2024) - Achievement"
                         rows={3}
                       />
                     </div>
