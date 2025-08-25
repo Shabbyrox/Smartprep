@@ -9,6 +9,8 @@
     "start": "next start"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.43.1",
+    "@clerk/nextjs": "^6.31.4",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "latest",
     "@radix-ui/react-alert-dialog": "latest",
@@ -53,6 +55,7 @@
     "react-day-picker": "latest",
     "react-dom": "^19",
     "react-hook-form": "latest",
+    "react-is": "^19.1.1",
     "react-resizable-panels": "latest",
     "recharts": "latest",
     "sonner": "latest",

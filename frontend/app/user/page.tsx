@@ -1,16 +1,49 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Upload, FileText, MessageSquare, Brain, CheckCircle, AlertCircle, Target } from "lucide-react"
-import { UserNavbar } from "@/components/user-navbar"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts"
+import { useState } from "react";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Upload,
+  FileText,
+  MessageSquare,
+  Brain,
+  CheckCircle,
+  AlertCircle,
+  Target,
+} from "lucide-react";
+import { UserNavbar } from "@/components/user-navbar";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+} from "recharts";
 import Link from "next/Link";
 
 const skillsData = [
@@ -19,7 +52,7 @@ const skillsData = [
   { skill: "Python", score: 92 },
   { skill: "SQL", score: 70 },
   { skill: "Node.js", score: 65 },
-]
+];
 
 const progressData = [
   { month: "Jan", score: 65 },
@@ -27,7 +60,7 @@ const progressData = [
   { month: "Mar", score: 78 },
   { month: "Apr", score: 85 },
   { month: "May", score: 88 },
-]
+];
 
 const jobRecommendations = [
   {
@@ -51,7 +84,7 @@ const jobRecommendations = [
     location: "Chennai",
     salary: "₹20-30 LPA",
   },
-]
+];
 
 const quizzes = [
   {
@@ -76,15 +109,38 @@ const quizzes = [
     difficulty: "Hard",
     completed: false,
   },
-]
+];
 
 export default function UserDashboard() {
-  const [resumeUploaded, setResumeUploaded] = useState(false)
-  const [selectedQuiz, setSelectedQuiz] = useState("")
+  const [resumeUploaded, setResumeUploaded] = useState(false);
+  const [selectedQuiz, setSelectedQuiz] = useState("");
+  const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push("/auth");
+    }
+  }, [isSignedIn, isLoaded, router]);
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isSignedIn) {
+    return null;
+  }
 
   const handleResumeUpload = () => {
-    setResumeUploaded(true)
-  }
+    setResumeUploaded(true);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -92,8 +148,15 @@ export default function UserDashboard() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, John!</h1>
-          <p className="text-gray-600">Track your progress and continue your job preparation journey hi </p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome back,{" "}
+            {user?.firstName ||
+              user?.emailAddresses[0]?.emailAddress?.split("@")[0]}
+            !
+          </h1>
+          <p className="text-gray-600">
+            Track your progress and continue your job preparation journey
+          </p>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
@@ -110,18 +173,24 @@ export default function UserDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Resume Score</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Resume Score
+                  </CardTitle>
                   <FileText className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">85%</div>
-                  <p className="text-xs text-muted-foreground">+5% from last week</p>
+                  <p className="text-xs text-muted-foreground">
+                    +5% from last week
+                  </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Quizzes Completed</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Quizzes Completed
+                  </CardTitle>
                   <Brain className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -132,23 +201,31 @@ export default function UserDashboard() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Interview Score</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Interview Score
+                  </CardTitle>
                   <MessageSquare className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">78%</div>
-                  <p className="text-xs text-muted-foreground">+12% improvement</p>
+                  <p className="text-xs text-muted-foreground">
+                    +12% improvement
+                  </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Job Matches</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Job Matches
+                  </CardTitle>
                   <Target className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">24</div>
-                  <p className="text-xs text-muted-foreground">8 new this week</p>
+                  <p className="text-xs text-muted-foreground">
+                    8 new this week
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -185,7 +262,12 @@ export default function UserDashboard() {
                       <XAxis dataKey="month" />
                       <YAxis />
                       <Tooltip />
-                      <Line type="monotone" dataKey="score" stroke="#8b5cf6" strokeWidth={2} />
+                      <Line
+                        type="monotone"
+                        dataKey="score"
+                        stroke="#8b5cf6"
+                        strokeWidth={2}
+                      />
                     </LineChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -198,20 +280,29 @@ export default function UserDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle>Upload Resume</CardTitle>
-                  <CardDescription>Upload your resume for AI-powered analysis</CardDescription>
+                  <CardDescription>
+                    Upload your resume for AI-powered analysis
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                     <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <p className="text-sm text-gray-600 mb-4">Drag and drop your resume here, or click to browse</p>
-                    <Button onClick={handleResumeUpload} className="bg-purple-600 hover:bg-purple-700">
+                    <p className="text-sm text-gray-600 mb-4">
+                      Drag and drop your resume here, or click to browse
+                    </p>
+                    <Button
+                      onClick={handleResumeUpload}
+                      className="bg-purple-600 hover:bg-purple-700"
+                    >
                       {resumeUploaded ? "Resume Uploaded" : "Choose File"}
                     </Button>
                   </div>
                   {resumeUploaded && (
                     <div className="flex items-center space-x-2 text-green-600">
                       <CheckCircle className="h-4 w-4" />
-                      <span className="text-sm">resume.pdf uploaded successfully</span>
+                      <span className="text-sm">
+                        resume.pdf uploaded successfully
+                      </span>
                     </div>
                   )}
                 </CardContent>
@@ -220,41 +311,53 @@ export default function UserDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle>AI Feedback</CardTitle>
-                  <CardDescription>Personalized suggestions to improve your resume</CardDescription>
+                  <CardDescription>
+                    Personalized suggestions to improve your resume
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {resumeUploaded ? (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="font-medium">Overall Score</span>
-                        <Badge className="bg-green-100 text-green-800">85/100</Badge>
+                        <Badge className="bg-green-100 text-green-800">
+                          85/100
+                        </Badge>
                       </div>
                       <Progress value={85} className="w-full" />
 
                       <div className="space-y-3">
                         <div className="flex items-start space-x-2">
                           <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                          <span className="text-sm">Strong technical skills section</span>
+                          <span className="text-sm">
+                            Strong technical skills section
+                          </span>
                         </div>
                         <div className="flex items-start space-x-2">
                           <AlertCircle className="h-4 w-4 text-yellow-500 mt-0.5" />
-                          <span className="text-sm">Add more quantified achievements</span>
+                          <span className="text-sm">
+                            Add more quantified achievements
+                          </span>
                         </div>
                         <div className="flex items-start space-x-2">
                           <AlertCircle className="h-4 w-4 text-red-500 mt-0.5" />
-                          <span className="text-sm">Include relevant keywords: "React", "Node.js"</span>
+                          <span className="text-sm">
+                            Include relevant keywords: "React", "Node.js"
+                          </span>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-gray-500 text-center py-8">Upload your resume to get AI-powered feedback</p>
+                    <p className="text-gray-500 text-center py-8">
+                      Upload your resume to get AI-powered feedback
+                    </p>
                   )}
                 </CardContent>
               </Card>
             </div>
             <div>
               <Link href="/resumeEdit">
-              <Button>Click to create new resume</Button>
+                <Button>Click to create new resume</Button>
               </Link>
             </div>
           </TabsContent>
@@ -263,12 +366,17 @@ export default function UserDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>Recommended Jobs</CardTitle>
-                <CardDescription>AI-curated job opportunities based on your profile</CardDescription>
+                <CardDescription>
+                  AI-curated job opportunities based on your profile
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {jobRecommendations.map((job, index) => (
-                    <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div
+                      key={index}
+                      className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                    >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h3 className="font-semibold text-lg">{job.title}</h3>
@@ -279,9 +387,14 @@ export default function UserDashboard() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <Badge className="bg-green-100 text-green-800 mb-2">{job.match}% Match</Badge>
+                          <Badge className="bg-green-100 text-green-800 mb-2">
+                            {job.match}% Match
+                          </Badge>
                           <div>
-                            <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                            <Button
+                              size="sm"
+                              className="bg-purple-600 hover:bg-purple-700"
+                            >
                               Apply Now
                             </Button>
                           </div>
@@ -298,7 +411,9 @@ export default function UserDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>Company-Specific Quizzes</CardTitle>
-                <CardDescription>Practice with real interview questions</CardDescription>
+                <CardDescription>
+                  Practice with real interview questions
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -306,11 +421,19 @@ export default function UserDashboard() {
                     <div key={index} className="border rounded-lg p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{quiz.company} Quiz</h3>
+                          <h3 className="font-semibold text-lg">
+                            {quiz.company} Quiz
+                          </h3>
                           <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
                             <span>{quiz.questions} questions</span>
                             <span>{quiz.duration}</span>
-                            <Badge variant={quiz.difficulty === "Hard" ? "destructive" : "secondary"}>
+                            <Badge
+                              variant={
+                                quiz.difficulty === "Hard"
+                                  ? "destructive"
+                                  : "secondary"
+                              }
+                            >
                               {quiz.difficulty}
                             </Badge>
                           </div>
@@ -318,7 +441,9 @@ export default function UserDashboard() {
                         <div className="text-right">
                           {quiz.completed ? (
                             <div>
-                              <Badge className="bg-green-100 text-green-800 mb-2">Score: {quiz.score}%</Badge>
+                              <Badge className="bg-green-100 text-green-800 mb-2">
+                                Score: {quiz.score}%
+                              </Badge>
                               <div>
                                 <Button size="sm" variant="outline">
                                   Retake
@@ -326,7 +451,10 @@ export default function UserDashboard() {
                               </div>
                             </div>
                           ) : (
-                            <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                            <Button
+                              size="sm"
+                              className="bg-purple-600 hover:bg-purple-700"
+                            >
                               Start Quiz
                             </Button>
                           )}
@@ -344,7 +472,9 @@ export default function UserDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle>Mock Interview</CardTitle>
-                  <CardDescription>Practice with AI-powered mock interviews</CardDescription>
+                  <CardDescription>
+                    Practice with AI-powered mock interviews
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
@@ -368,21 +498,31 @@ export default function UserDashboard() {
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="frontend">Frontend Developer</SelectItem>
-                        <SelectItem value="backend">Backend Developer</SelectItem>
-                        <SelectItem value="fullstack">Full Stack Developer</SelectItem>
+                        <SelectItem value="frontend">
+                          Frontend Developer
+                        </SelectItem>
+                        <SelectItem value="backend">
+                          Backend Developer
+                        </SelectItem>
+                        <SelectItem value="fullstack">
+                          Full Stack Developer
+                        </SelectItem>
                         <SelectItem value="data">Data Scientist</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button className="w-full bg-purple-600 hover:bg-purple-700">Start Mock Interview</Button>
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                    Start Mock Interview
+                  </Button>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
                   <CardTitle>Recent Interview Performance</CardTitle>
-                  <CardDescription>Your latest mock interview results</CardDescription>
+                  <CardDescription>
+                    Your latest mock interview results
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
@@ -423,5 +563,5 @@ export default function UserDashboard() {
         </Tabs>
       </div>
     </div>
-  )
+  );
 }
