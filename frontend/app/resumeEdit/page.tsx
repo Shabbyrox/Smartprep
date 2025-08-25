@@ -1,13 +1,16 @@
+// resumeEdit/page.tsx
 "use client"
 
 import { useState } from "react"
 import dynamic from 'next/dynamic'; // Import dynamic for client-side loading
+// 🚨 Import useRouter
+import { useRouter } from 'next/navigation'; 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { Download, FileText, User, Briefcase, GraduationCap, Award, Code } from "lucide-react"
+import { Download, FileText, User, Briefcase, GraduationCap, Award, Code, AlertTriangle, ArrowLeft } from "lucide-react"
 
 const PDFDownloadWrapper = dynamic(
   () => import('@/components/ResumePDF'),
@@ -61,6 +64,9 @@ interface ResumeData {
 }
 
 export default function ResumeBuilder() {
+  // 🚨 Initialize useRouter
+  const router = useRouter(); 
+
   const [resumeData, setResumeData] = useState<ResumeData>({
     personalInfo: {
       fullName: "",
@@ -77,6 +83,9 @@ export default function ResumeBuilder() {
     skills: [""],
     certifications: [{ id: "1", name: "", description: "" }],
   })
+
+  // 1. State for the alert trigger
+  const [showNameAlert, setShowNameAlert] = useState(false);
 
   const updatePersonalInfo = (field: keyof ResumeData["personalInfo"], value: string) => {
     setResumeData((prev) => ({
@@ -196,16 +205,65 @@ export default function ResumeBuilder() {
     return text.split('\n').filter(line => line.trim() !== '').map(line => line.trim());
   }
 
-  // NOTE: The original downloadPDF function is removed, 
-  // as the new PDFDownloadWrapper handles the download logic.
+  // 2. Logic to check if required fields are filled (excluding fullName)
+  const checkOtherFieldsFilled = () => {
+    const { phone, email, location, summary } = resumeData.personalInfo;
+    
+    // Add other sections' basic check if they are considered "required"
+    const hasMinExperience = resumeData.experience.some(exp => exp.company.trim() && exp.position.trim());
+    const hasMinEducation = resumeData.education.some(edu => edu.school.trim() && edu.degree.trim());
+    const hasMinSkills = resumeData.skills.some(skill => skill.trim());
+
+    return (
+      phone.trim() !== "" &&
+      email.trim() !== "" &&
+      location.trim() !== "" &&
+      summary.trim() !== "" &&
+      hasMinExperience &&
+      hasMinEducation &&
+      hasMinSkills
+    );
+  };
+
+  // 3. Focus handler for the Full Name input
+  const handleFullNameFocus = () => {
+    const areOtherFieldsFilled = checkOtherFieldsFilled();
+    if (!areOtherFieldsFilled) {
+      setShowNameAlert(true);
+    } else {
+      setShowNameAlert(false);
+    }
+  };
+  
+  // 4. Handle change to clear the alert if the user starts filling a required field
+  const handlePersonalInfoChange = (field: keyof ResumeData["personalInfo"], value: string) => {
+    updatePersonalInfo(field, value);
+    // Hide the alert when the user starts filling any required field
+    if (showNameAlert && value.trim() !== "") {
+        setShowNameAlert(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-2">
-            <FileText className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">Resume Builder</h1>
+          {/* 🚨 Updated Header for Dashboard Button */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText className="h-6 w-6 text-primary" />
+              <h1 className="text-2xl font-bold text-foreground">Resume Builder</h1>
+            </div>
+            
+            {/* 🚨 Dashboard Button */}
+            <Button 
+              onClick={() => router.push('/dashboard')} 
+              variant="outline" 
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
           </div>
         </div>
       </header>
@@ -214,6 +272,22 @@ export default function ResumeBuilder() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Form Section */}
           <div className="space-y-6">
+            
+            {/* 5. Display the Alert Banner */}
+            {showNameAlert && (
+              <div className="flex items-center p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-lg shadow-md transition-all duration-300">
+                <AlertTriangle className="h-5 w-5 mr-3 flex-shrink-0" />
+                <p className="font-medium text-sm">
+                  **Development Tip**: For a better experience and to avoid errors, please fill out the **Phone, Email, Location, Career Objective, Experience, Education, Skills and other sections** before entering your **Full Name**.
+                </p>
+                <button 
+                    onClick={() => setShowNameAlert(false)} 
+                    className="ml-auto text-yellow-700 hover:text-yellow-900 font-bold text-lg leading-none"
+                    aria-label="Close alert"
+                >&times;</button>
+              </div>
+            )}
+
             {/* Personal Information */}
             <Card>
               <CardHeader>
@@ -229,6 +303,8 @@ export default function ResumeBuilder() {
                     <Input
                       id="fullName"
                       value={resumeData.personalInfo.fullName}
+                      // 6. Add onFocus handler
+                      onFocus={handleFullNameFocus}
                       onChange={(e) => updatePersonalInfo("fullName", e.target.value)}
                       placeholder="John Doe"
                     />
@@ -238,7 +314,7 @@ export default function ResumeBuilder() {
                     <Input
                       id="phone"
                       value={resumeData.personalInfo.phone}
-                      onChange={(e) => updatePersonalInfo("phone", e.target.value)}
+                      onChange={(e) => handlePersonalInfoChange("phone", e.target.value)}
                       placeholder="+91 1234567891"
                     />
                   </div>
@@ -248,7 +324,7 @@ export default function ResumeBuilder() {
                       id="email"
                       type="email"
                       value={resumeData.personalInfo.email}
-                      onChange={(e) => updatePersonalInfo("email", e.target.value)}
+                      onChange={(e) => handlePersonalInfoChange("email", e.target.value)}
                       placeholder="john@example.com"
                     />
                   </div>
@@ -257,7 +333,7 @@ export default function ResumeBuilder() {
                     <Input
                       id="linkedin"
                       value={resumeData.personalInfo.linkedin}
-                      onChange={(e) => updatePersonalInfo("linkedin", e.target.value)}
+                      onChange={(e) => handlePersonalInfoChange("linkedin", e.target.value)}
                       placeholder="linkedin.com/in/johndoe"
                     />
                   </div>
@@ -266,7 +342,7 @@ export default function ResumeBuilder() {
                     <Input
                       id="github"
                       value={resumeData.personalInfo.github}
-                      onChange={(e) => updatePersonalInfo("github", e.target.value)}
+                      onChange={(e) => handlePersonalInfoChange("github", e.target.value)}
                       placeholder="github.com/johndoe"
                     />
                   </div>
@@ -275,7 +351,7 @@ export default function ResumeBuilder() {
                     <Input
                       id="location"
                       value={resumeData.personalInfo.location}
-                      onChange={(e) => updatePersonalInfo("location", e.target.value)}
+                      onChange={(e) => handlePersonalInfoChange("location", e.target.value)}
                       placeholder="Mumbai, India"
                     />
                   </div>
@@ -285,7 +361,7 @@ export default function ResumeBuilder() {
                   <Textarea
                     id="summary"
                     value={resumeData.personalInfo.summary}
-                    onChange={(e) => updatePersonalInfo("summary", e.target.value)}
+                    onChange={(e) => handlePersonalInfoChange("summary", e.target.value)}
                     placeholder="Brief summary of your professional background and goals..."
                     rows={3}
                   />
@@ -327,7 +403,7 @@ export default function ResumeBuilder() {
                       <Input
                         value={exp.duration}
                         onChange={(e) => updateExperience(exp.id, "duration", e.target.value)}
-                        placeholder="Jan 2020 - Present"
+                          placeholder="Jan 2020 - Present"
                       />
                     </div>
                     <div>
@@ -425,7 +501,9 @@ export default function ResumeBuilder() {
                       <Textarea
                         value={cert.description}
                         onChange={(e) => updateCertification(cert.id, "description", e.target.value)}
-                        placeholder="Start from new line for a new point (Press enter), Issued by AWS, August 2023 - Certificate / Selected for (Hackathon/Event) Regionals;Winner of the Annual Hackathon (2024) - Achievement"
+                        placeholder="Use a new line (Enter) for each separate achievement or detail, like:
+                       Issued by AWS, August 2023 (for certificates)
+                      or Winner of the Annual Hackathon 2024 (for achievements)"
                         rows={3}
                       />
                     </div>
@@ -513,7 +591,7 @@ export default function ResumeBuilder() {
                     key={index}
                     value={skill}
                     onChange={(e) => updateSkills(index, e.target.value)}
-                    placeholder="Enter a skill"
+                    placeholder="Language: JavaScript, Python, C"
                   />
                 ))}
                 <Button onClick={addSkill} variant="outline" className="w-full bg-transparent">
@@ -701,7 +779,9 @@ export default function ResumeBuilder() {
                   {/* Skills */}
                   {resumeData.skills.some((skill) => skill.trim()) && (
                     <div className="mb-4">
-                      <h2 className="text-lg font-bold text-gray-900 mb-2 border-b-2 border-gray-900 pb-0.5 uppercase tracking-wider"></h2>
+                      <h2 className="text-lg font-bold text-gray-900 mb-2 border-b-2 border-gray-900 pb-0.5 uppercase tracking-wider">
+                        Skills
+                      </h2>
                       <div className="text-gray-700 text-sm leading-relaxed">
                         {/* Join skills with a separator */}
                         {resumeData.skills.filter((skill) => skill.trim()).join(' • ')}
