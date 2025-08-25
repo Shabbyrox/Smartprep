@@ -20,6 +20,8 @@ import {
   Settings,
   FileText,
   BarChart3,
+  // Import the new Icon (e.g., Search or MagnifyingGlass)
+  Search, // Or use another relevant icon like MagnifyingGlass or Eye
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -94,6 +96,26 @@ export default function DashboardPage() {
             <CardContent>
               <Button asChild className="w-full">
                 <Link href="/resumeEdit">Build Resume</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Resume Scan Card (NEW) */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                {/* Using the imported Search icon */}
+                <Search className="h-5 w-5 text-purple-600" />
+                <span>Resume Scan</span>
+              </CardTitle>
+              <CardDescription>
+               Analyze your resume for skill gaps and best-fit career paths.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                {/* Link to your new resume scan page */}
+                <Link href="/resumeScan">Scan Resume</Link>
               </Button>
             </CardContent>
           </Card>
