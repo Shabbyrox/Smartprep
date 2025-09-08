@@ -1,3 +1,4 @@
+"use client";
 import { SignUp } from "@clerk/nextjs";
 
 export default function Page() {
@@ -10,7 +11,10 @@ export default function Page() {
             Join SmartPrep.AI and accelerate your career
           </p>
         </div>
-        <SignUp />
+        <SignUp
+          afterSignUpUrl="/auth/sync?redirect=/dashboard"
+          redirectUrl="/auth/sync?redirect=/dashboard"
+        />
       </div>
     </div>
   );
