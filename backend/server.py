@@ -174,4 +174,4 @@ def check_resume():
 
 if __name__ == "__main__":
     # Run on 0.0.0.0 so your React frontend can reach it
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5001, debug=True)
