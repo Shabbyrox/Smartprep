@@ -120,20 +120,20 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Interview Prep Card */}
+          {/* Interview and Quiz Card */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <BarChart3 className="h-5 w-5 text-purple-600" />
-                <span>Interview Prep</span>
+                <span>Career Roles</span>
               </CardTitle>
               <CardDescription>
-                Practice interviews with AI-powered mock sessions
+                Choose a role to start your quiz and intreview journey
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full" variant="outline">
-                <Link href="/interview">Start Practice</Link>
+                <Link href="/careerRoles">Start Practice</Link>
               </Button>
             </CardContent>
           </Card>
