@@ -4,6 +4,7 @@ import fs from "fs";
 import pdf from "pdf-parse";
 import { PDFDocument } from "pdf-lib";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import axios from "axios";
 import FormData from "form-data";
 import dotenv from "dotenv";   // ✅ Added
 dotenv.config();              // ✅ Load .env
