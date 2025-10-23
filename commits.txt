@@ -1,0 +1,32 @@
+$ git pull origin main --allow-unrelated-histories
+From https://github.com/Shabbyrox/Smartprep
+ * branch            main       -> FETCH_HEAD
+Auto-merging .gitignore
+CONFLICT (add/add): Merge conflict in .gitignore
+Auto-merging backend/.gitignore
+CONFLICT (add/add): Merge conflict in backend/.gitignore
+Auto-merging backend/package-lock.json
+CONFLICT (add/add): Merge conflict in backend/package-lock.json
+Auto-merging backend/requirements.txt
+CONFLICT (add/add): Merge conflict in backend/requirements.txt
+Auto-merging backend/routes/mcq.js
+CONFLICT (add/add): Merge conflict in backend/routes/mcq.js
+Auto-merging backend/routes/resume.js
+CONFLICT (add/add): Merge conflict in backend/routes/resume.js
+Auto-merging backend/server 2.js
+CONFLICT (add/add): Merge conflict in backend/server 2.js
+Auto-merging backend/server.js
+CONFLICT (add/add): Merge conflict in backend/server.js
+Auto-merging frontend/app/api/syncUser/route.ts
+CONFLICT (add/add): Merge conflict in frontend/app/api/syncUser/route.ts
+Auto-merging frontend/app/dashboard/page.tsx
+CONFLICT (add/add): Merge conflict in frontend/app/dashboard/page.tsx
+Auto-merging frontend/app/quiz/page.tsx
+CONFLICT (add/add): Merge conflict in frontend/app/quiz/page.tsx
+Auto-merging frontend/lib/firebase.ts
+CONFLICT (add/add): Merge conflict in frontend/lib/firebase.ts
+Auto-merging frontend/lib/firebaseAdmin.ts
+CONFLICT (add/add): Merge conflict in frontend/lib/firebaseAdmin.ts
+Auto-merging frontend/middleware.ts
+CONFLICT (add/add): Merge conflict in frontend/middleware.ts
+Automatic merge failed; fix conflicts and then commit the result.

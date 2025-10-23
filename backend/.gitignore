@@ -1,1 +1,7 @@
 env
+
+env/
+pyvenv/
+node_modules/
+
+.env
