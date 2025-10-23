@@ -20,7 +20,6 @@ export default function SyncPage() {
       setIsSyncing(true);
       setSyncError(null);
 
-      // Call syncUser API after successful authentication
       const apiUrl = `/api/syncUser`;
       console.log("🔄 Making API call to:", apiUrl);
 
