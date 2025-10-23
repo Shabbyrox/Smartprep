@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const userData = {
       email: user.emailAddresses[0]?.emailAddress,
       name: `${user.firstName} ${user.lastName}`,
-      createdAt: new Date(),
+      // createdAt: new Date(),
       updatedAt: new Date(),
     };
 

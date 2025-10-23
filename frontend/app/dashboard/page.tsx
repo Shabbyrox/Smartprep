@@ -133,7 +133,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full" variant="outline">
-                <Link href="/careerRoles">Start Practice</Link>
+                <Link href="/quiz">Start Practice</Link>
               </Button>
             </CardContent>
           </Card>
