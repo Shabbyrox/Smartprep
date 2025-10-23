@@ -5,6 +5,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { supabase } from "../../libsupabase/supabaseClient"
+import { useUser } from "@clerk/nextjs"
+import { db, auth } from "../../lib/firebase" // Import both db and auth
+import { doc, getDoc, setDoc } from "firebase/firestore"
+import { signInWithCustomToken } from "firebase/auth" // <-- Import Firebase auth function
 
 type Question = {
   id: string
@@ -24,6 +28,15 @@ const JOB_ROLES = [
 ]
 const LEVEL_COUNT = 10
 
+// Helper function to get default progress
+const getDefaultProgress = () => {
+  const progress: Record<string, number> = {}
+  JOB_ROLES.forEach((r) => {
+    progress[r.id] = 1 // Everyone starts with level 1 unlocked
+  })
+  return progress
+}
+
 export default function QuizPage() {
   const [role, setRole] = useState<string>(JOB_ROLES[0].id)
   const [level, setLevel] = useState<number>(1)
@@ -34,7 +47,11 @@ export default function QuizPage() {
   const [score, setScore] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [unlockedLevels, setUnlockedLevels] = useState<Record<string, number>>({})
+  const [unlockedLevels, setUnlockedLevels] = useState<Record<string, number>>(getDefaultProgress())
+  
+  const [isSaving, setIsSaving] = useState(false)
+  const { user, isLoaded: isClerkLoaded } = useUser() // Get Clerk user
+  const [isFirebaseReady, setIsFirebaseReady] = useState(false) // <-- New state
 
   // Timer state
   const [timerEnabled, setTimerEnabled] = useState(false)
@@ -42,16 +59,82 @@ export default function QuizPage() {
   const [timerSeconds, setTimerSeconds] = useState<number>(60 * 10)
   const timerRef = useRef<number | null>(null)
 
-  // Load unlocked levels from memory on mount
+  // --- NEW: Step 1 - Sign in to Firebase using Clerk ---
   useEffect(() => {
-    const progress: Record<string, number> = {}
-    JOB_ROLES.forEach((r) => {
-      progress[r.id] = 1 // Everyone starts with level 1 unlocked
-    })
-    setUnlockedLevels(progress)
-  }, [])
+    if (!isClerkLoaded || !user) return; // Wait for Clerk user to be loaded
 
-  // --- QUESTION FETCHING: Load questions from Supabase ---
+    const signInToFirebase = async () => {
+      try {
+        // Fetch the custom token from our new API route
+        const res = await fetch("/api/firebase-token");
+        if (!res.ok) {
+          throw new Error("Failed to fetch Firebase token");
+        }
+        
+        const { token } = await res.json();
+        
+        if (!token) {
+          throw new Error("Received empty token");
+        }
+
+        // Sign in to Firebase Auth with the custom token
+        await signInWithCustomToken(auth, token);
+        
+        console.log("Firebase Auth successful!");
+        setIsFirebaseReady(true); // <-- THIS IS KEY
+      } catch (err) {
+        console.error("Firebase Auth Error:", err);
+        setError("Could not authenticate with Firebase.");
+      }
+    };
+
+    // Only sign in if not already signed in
+    if (!auth.currentUser) {
+      signInToFirebase();
+    } else {
+      setIsFirebaseReady(true); // Already signed in
+    }
+    
+  }, [isClerkLoaded, user]); // Run when Clerk user is ready
+
+
+  // --- MODIFIED: Step 2 - Load progress from FIREBASE ---
+  useEffect(() => {
+    // Wait for BOTH Clerk to load AND Firebase to sign in
+    if (!isFirebaseReady || !user) return; 
+
+    async function loadProgress() {
+      console.log("Loading progress for user:", user.id);
+      const userDocRef = doc(db, "users", user.id);
+      
+      try {
+        // This call will now have permission
+        const docSnap = await getDoc(userDocRef); 
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.unlockedLevels) {
+            console.log("Found progress:", data.unlockedLevels);
+            setUnlockedLevels(prev => ({ ...getDefaultProgress(), ...data.unlockedLevels }))
+          } else {
+            console.log("No progress found, setting default.")
+            setUnlockedLevels(getDefaultProgress())
+          }
+        } else {
+          // This might happen if sync-user API hasn't run yet
+          console.log("No user doc, setting default progress.")
+          setUnlockedLevels(getDefaultProgress())
+        }
+      } catch (err) {
+        console.error("Error loading user progress:", err);
+        setError(err instanceof Error ? err.message : "Failed to load progress");
+      }
+    }
+
+    loadProgress();
+  }, [user, isFirebaseReady]); // <-- Run when Firebase is ready
+
+
+  // --- QUESTION FETCHING: Load questions from Supabase (No change) ---
   useEffect(() => {
     async function loadQuestions() {
       setQuestions([])
@@ -65,17 +148,13 @@ export default function QuizPage() {
       if (timerRef.current) window.clearInterval(timerRef.current)
 
       try {
-        const tableName = `${role}${level}` // e.g., 'sde1', 'da5'
-        
+        const tableName = `${role}${level}`
         const { data, error: fetchError } = await supabase
           .from(tableName)
           .select('*')
           .limit(10)
 
-        if (fetchError) {
-          throw new Error(fetchError.message || "Failed to fetch questions")
-        }
-
+        if (fetchError) throw new Error(fetchError.message)
         if (data && data.length > 0) {
           setQuestions(data as Question[])
         } else {
@@ -88,7 +167,6 @@ export default function QuizPage() {
         setLoading(false)
       }
     }
-
     loadQuestions()
   }, [role, level])
 
@@ -98,8 +176,12 @@ export default function QuizPage() {
     if (!submitted) setAnswers((s) => ({ ...s, [qId]: option }))
   }
 
+  // --- onSubmit to save to FIREBASE (No change in this function's logic) ---
+  // This will now work because the user is signed in
   const onSubmit = async () => {
-    if (submitted) return
+    if (submitted || isSaving) return
+    setIsSaving(true)
+
     let correct = 0
     for (const q of questions) {
       const ans = answers[q.id]
@@ -112,21 +194,48 @@ export default function QuizPage() {
     setTimerRunning(false)
     if (timerRef.current) window.clearInterval(timerRef.current)
 
-    // Unlock next level if passed (score > 40%) and not already at max level
+    let newUnlockedLevelsMap = { ...unlockedLevels }
+
     if (pct > 40 && level < LEVEL_COUNT) {
       const currentUnlocked = unlockedLevels[role] || 1
       const newUnlockedLevel = Math.max(currentUnlocked, level + 1)
       
       if (newUnlockedLevel > currentUnlocked) {
-        setUnlockedLevels(prev => ({
-          ...prev,
+        newUnlockedLevelsMap = {
+          ...unlockedLevels,
           [role]: newUnlockedLevel
-        }))
+        }
+        setUnlockedLevels(newUnlockedLevelsMap)
       }
     }
+    
+    if (user) {
+      try {
+        const userDocRef = doc(db, "users", user.id)
+        const quizAttempt = {
+          role,
+          level,
+          score: pct,
+          passed: pct > 40,
+          timestamp: new Date().toISOString()
+        }
+        
+        await setDoc(userDocRef, { 
+          unlockedLevels: newUnlockedLevelsMap,
+          lastQuizAttempt: quizAttempt
+        }, { merge: true }) // merge: true is important!
+        
+        console.log("Progress saved successfully!")
+
+      } catch (err) {
+        console.error("Failed to save progress:", err)
+      }
+    }
+    
+    setIsSaving(false)
   }
 
-  // --- TIMER LOGIC ---
+  // --- TIMER LOGIC (No change) ---
   useEffect(() => {
     if (!timerEnabled || !timerRunning) return
     if (timerRef.current) window.clearInterval(timerRef.current)
@@ -158,7 +267,6 @@ export default function QuizPage() {
   const getRoleName = (id: string) => JOB_ROLES.find(r => r.id === id)?.name || id
   const canAccessLevel = (roleId: string, lvl: number) => lvl <= (unlockedLevels[roleId] || 1)
 
-  // Get all options for current question
   const getOptions = (q: Question) => [
     { key: 'option_a', value: q.option_a },
     { key: 'option_b', value: q.option_b },
@@ -166,6 +274,19 @@ export default function QuizPage() {
     { key: 'option_d', value: q.option_d }
   ]
 
+  // --- MODIFIED: Loading State ---
+  // Show a loading screen until both Clerk and Firebase are ready
+  if (!isClerkLoaded || !isFirebaseReady) {
+    return (
+      <div className="container mx-auto p-4 sm:p-6 min-h-screen flex items-center justify-center">
+        <div className="text-center text-lg text-blue-600">
+          {!isClerkLoaded ? "Loading user..." : "Authenticating with datastore..."}
+        </div>
+      </div>
+    )
+  }
+  
+  // --- All your JSX from here down is the same ---
   return (
     <div className="container mx-auto p-4 sm:p-6 min-h-screen">
       <div className="grid grid-cols-12 gap-6">
@@ -373,9 +494,9 @@ export default function QuizPage() {
                       onClick={onSubmit} 
                       size="lg" 
                       className="bg-green-600 hover:bg-green-700 text-white shadow-lg"
-                      disabled={questions.length === 0 || timerSeconds === 0 || Object.keys(answers).length !== questions.length}
+                      disabled={isSaving || questions.length === 0 || timerSeconds === 0 || Object.keys(answers).length !== questions.length}
                     >
-                      Submit Quiz
+                      {isSaving ? "Saving..." : "Submit Quiz"} 
                     </Button>
                   ) : (
                     <div className="text-lg p-2 rounded-lg font-bold bg-white shadow-xl border">

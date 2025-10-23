@@ -1,12 +1,21 @@
-import { getApps, initializeApp, cert, App } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import * as admin from "firebase-admin";
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY as string);
+// Make sure your .env.local has FIREBASE_SERVICE_ACCOUNT_KEY
+// This is a JSON object, not just a key.
+// You must get this from your Google Cloud project service accounts.
+const serviceAccount = JSON.parse(
+  process.env.FIREBASE_SERVICE_ACCOUNT_KEY as string
+);
 
-const app: App = getApps().length
-  ? getApps()[0]
-  : initializeApp({
-      credential: cert(serviceAccount),
-    });
+// Check if app is already initialized
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
 
-export const adminDb = getFirestore(app);
+const adminDb = admin.firestore();
+const adminAuth = admin.auth(); // <-- This is needed for the token route
+
+export { adminDb, adminAuth }; // <-- Export both
+
