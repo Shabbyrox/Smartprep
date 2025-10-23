@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { supabase } from "../../libsupabase/supabaseClient"
 
-// Define the Question type
 type Question = {
   id: string
   question: string
