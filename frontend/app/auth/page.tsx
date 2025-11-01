@@ -106,7 +106,7 @@ export default function AuthPage() {
                     Resume optimization & interview prep
                   </span>
                 </div>
-                <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
+                {/* <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
                   <GraduationCap className="h-4 w-4 text-purple-600" />
                   <span className="text-sm font-medium">
                     University/Institute
@@ -121,7 +121,7 @@ export default function AuthPage() {
                   <span className="text-xs text-gray-500 ml-auto">
                     Platform management
                   </span>
-                </div>
+                </div> */}
               </div>
             </div>
 

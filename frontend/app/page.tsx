@@ -29,7 +29,7 @@ export default function LandingPage() {
             <Link href="/auth">
               <Button variant="outline">Sign In</Button>
             </Link>
-            <Link href="/signup">
+            <Link href="/auth">
               <Button className="bg-purple-600 hover:bg-purple-700">Get Started</Button>
             </Link>
           </div>
@@ -40,18 +40,18 @@ export default function LandingPage() {
       <section className="py-20 px-4">
         <div className="container mx-auto text-center">
           <Badge className="mb-4 bg-purple-100 text-purple-800 hover:bg-purple-100">
-            AI-Powered Career Preparation
+            Personalized Career Preparation
           </Badge>
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
             Ace Your Dream Job with{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
-              AI-Powered
+              Personalized
             </span>{" "}
             Preparation
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Transform your career prospects with personalized resume optimization, company-specific interview prep, and
-            comprehensive skill assessments powered by advanced AI technology.
+            Transform your career prospects with personalized resume optimization, interview prep and
+            comprehensive skill assessments powered by advanced technology.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth">
@@ -59,9 +59,9 @@ export default function LandingPage() {
                 Start Free Trial
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="px-8 py-3 text-lg bg-transparent">
+            {/* <Button size="lg" variant="outline" className="px-8 py-3 text-lg bg-transparent">
               Watch Demo
-            </Button>
+            </Button> */}
           </div>
         </div>
       </section>
@@ -72,7 +72,7 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Everything You Need to Land Your Dream Job</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Comprehensive tools and AI-driven insights to boost your placement success rate
+             Comprehensive tools and intelligent analytics to boost your placement success rate.
             </p>
           </div>
 
@@ -95,6 +95,9 @@ export default function LandingPage() {
                   Practice with AI-driven mock interviews tailored to specific companies and roles
                 </CardDescription>
               </CardHeader>
+                <Badge className="ml-4 mb-4 bg-purple-100 text-purple-800 hover:bg-purple-100">
+                  Coming soon
+                </Badge>
             </Card>
 
             <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
@@ -110,7 +113,7 @@ export default function LandingPage() {
             <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader>
                 <Brain className="h-12 w-12 text-orange-600 mb-4" />
-                <CardTitle>Company-Specific Quizzes</CardTitle>
+                <CardTitle>Role-Specific Quizzes</CardTitle>
                 <CardDescription>Targeted practice questions based on real company interview patterns</CardDescription>
               </CardHeader>
             </Card>
@@ -136,7 +139,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
+      {/* Testimonials Section
       <section id="testimonials" className="py-20 px-4 bg-gray-50">
         <div className="container mx-auto">
           <div className="text-center mb-16">
@@ -215,7 +218,7 @@ export default function LandingPage() {
             </Card>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* CTA Section */}
       <section className="py-20 px-4 bg-gradient-to-r from-purple-600 to-blue-600">
@@ -230,13 +233,13 @@ export default function LandingPage() {
                 Start Your Journey
               </Button>
             </Link>
-            <Button
+            {/* <Button
               size="lg"
               variant="outline"
               className="border-white text-white hover:bg-white hover:text-purple-600 px-8 py-3 text-lg bg-transparent"
             >
               Schedule Demo
-            </Button>
+            </Button> */}
           </div>
         </div>
       </section>
