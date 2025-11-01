@@ -278,7 +278,13 @@ export default function ResumeBuilder() {
               <div className="flex items-center p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-lg shadow-md transition-all duration-300">
                 <AlertTriangle className="h-5 w-5 mr-3 flex-shrink-0" />
                 <p className="font-medium text-sm">
-                  **Development Tip**: For a better experience and to avoid errors, please fill out the **Phone, Email, Location, Career Objective, Experience, Education, Skills and other sections** before entering your **Full Name**.
+                  Quick Tip: To avoid errors and ensure a smooth experience, 
+                  please fill in your contact, education, skills, experience... other fields before adding 
+                  your Full Name. Full Name is the final step!
+                  {/* Development Tip: For a better experience and to avoid errors, 
+                  please fill out the Phone, Email, Location, Career Objective, Experience, Education, 
+                  Skills and other sections as per your needs before entering your Full Name. Enter Full Name only after 
+                  completing all other fields. */}
                 </p>
                 <button 
                     onClick={() => setShowNameAlert(false)} 

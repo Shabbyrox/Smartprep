@@ -120,6 +120,33 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
+          {/* Company-Specific Resume Scan Card (FIXED UI) */}
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                {/* Using the imported Search icon */}
+                <Search className="h-5 w-5 text-purple-600" />
+                <span>Resume analyzer</span>
+              </CardTitle>
+              <CardDescription>
+                Get a full resume review covering your ATS Score, Structure, Content and Skills.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild className="w-full">
+                <a 
+                  // Use the actual deployed link you provided
+                  href="https://ai-resume-analyzer-smartprep.vercel.app" 
+                  target="_blank"                 
+                  rel="noopener noreferrer"       
+                  // The default Button style (no variant="...") should match the dark button in the image.
+                >
+                  Scan Resume
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Interview and Quiz Card */}
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader>
@@ -128,17 +155,17 @@ export default function DashboardPage() {
                 <span>Career Roles</span>
               </CardTitle>
               <CardDescription>
-                Choose a role to start your quiz and intreview journey
+                Choose a role to start your quiz and interview journey
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button asChild className="w-full" variant="outline">
+              <Button asChild className="w-full">
                 <Link href="/quiz">Start Practice</Link>
               </Button>
             </CardContent>
           </Card>
 
-          {/* Profile Settings Card */}
+          {/* Profile Settings Card
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -154,7 +181,7 @@ export default function DashboardPage() {
                 <Link href="/user">Manage Profile</Link>
               </Button>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         {/* Quick Stats */}

@@ -206,7 +206,7 @@ router.post('/send-to-python', upload.single('resume'), async (req, res) => {
     const form = new FormData();
     form.append('resume', fs.createReadStream(filePath), originalname);
 
-    const pythonURL = 'http://localhost:5000/check-resume-summary';
+    const pythonURL = 'http://localhost:5001/check-resume-summary';
     const pythonResp = await axios.post(pythonURL, form, {
       headers: { ...form.getHeaders() },
       maxBodyLength: Infinity,
@@ -432,7 +432,7 @@ router.post('/send-to-python', upload.single('resume'), async (req, res) => {
     const form = new FormData();
     form.append('resume', fs.createReadStream(filePath), originalname);
 
-    const pythonURL = 'http://localhost:5000/check-resume-summary';
+    const pythonURL = 'http://localhost:5001/check-resume-summary';
     const pythonResp = await axios.post(pythonURL, form, {
       headers: { ...form.getHeaders() },
       maxBodyLength: Infinity,

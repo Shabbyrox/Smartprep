@@ -209,7 +209,7 @@ export default function ResumeScanPage() {
 
             <div className="pt-4 text-center">
               <Button asChild>
-                <Link href="/interview">Practice Interview for {result.bestFitRole}</Link>
+                <Link href="/quiz">Practice Quiz for {result.bestFitRole}</Link>
               </Button>
             </div>
           </div>
