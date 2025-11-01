@@ -10,7 +10,7 @@ interface BackendResponse {
 }
 
 // ⚠️ KEY CHANGE 1: Match the Flask URL and endpoint
-const YOUR_EXTERNAL_BACKEND_URL = process.env.AI_SCAN_ENDPOINT || 'http://localhost:5001/check_resume'; 
+const YOUR_EXTERNAL_BACKEND_URL = process.env.AI_SCAN_ENDPOINT;
 
 // Route Handler for POST requests
 export async function POST(request: Request) {

@@ -108,7 +108,7 @@ export default function ResumeScanPage() {
           <CardHeader>
             <CardTitle>Upload Resume (PDF)</CardTitle>
             <CardDescription>
-              Get an AI-powered analysis of your resume, including your **ideal role prediction**, **recommended skills**, and **alternative career options**.
+              Get an AI-powered analysis of your resume, including your ideal role prediction, recommended skills, and alternative career options.
             </CardDescription>
           </CardHeader>
           <CardContent>
