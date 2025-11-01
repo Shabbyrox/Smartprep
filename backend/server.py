@@ -6,13 +6,33 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import re
 import os
+import io
+import tempfile
+import logging
 
+# Set up basic logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# --- Configuration & Initialization ---
 app = Flask(__name__)
-CORS(app)
+
+# Set max file size to 5 MB (5 * 1024 * 1024 bytes) to prevent DoS attacks
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+
+# Set CORS policy based on environment variable for production security
+# Example: ALLOWED_ORIGINS = "https://your-frontend.com,http://localhost:3000"
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000") # Default to local frontend for quick setup
+allowed_origins_list = [
+    origin.strip() for origin in allowed_origins_str.split(',')
+] if allowed_origins_str != "*" else "*"
+
+CORS(app, resources={r"/*": {"origins": allowed_origins_list}})
+
+logger.info(f"CORS allowed origins set to: {allowed_origins_list}")
 
 # -------------------------
-# Job roles -> ordered skills (about 50 roles)
-# The order matters: we recommend the next 2 missing skills in this sequence.
+# Job roles -> ordered skills (Your full list)
 # -------------------------
 job_skills = {
     # Engineering & Web
@@ -86,19 +106,40 @@ job_skills = {
 }
 
 # -------------------------
-# Utilities
+# Utilities (Modified for secure, in-memory processing)
 # -------------------------
-def extract_file(file_path: str) -> str:
-    if file_path.lower().endswith(".pdf"):
-        reader = PyPDF2.PdfReader(file_path)
-        text = ""
-        for page in reader.pages:
-            # page.extract_text() can return None on some PDFs
-            page_text = page.extract_text() or ""
-            text += page_text + " "
-        return text
-    elif file_path.lower().endswith(".docx"):
-        return docx2txt.process(file_path)
+def extract_file_content(file_storage) -> str:
+    """Extracts text from a file object using in-memory or temporary files."""
+    filename = file_storage.filename.lower()
+    
+    # Reset file pointer to the beginning before reading
+    file_storage.seek(0)
+    
+    if filename.endswith(".pdf"):
+        # Use in-memory buffer for PDFs
+        pdf_file = io.BytesIO(file_storage.read())
+        try:
+            reader = PyPDF2.PdfReader(pdf_file)
+            text = ""
+            for page in reader.pages:
+                page_text = page.extract_text() or ""
+                text += page_text + " "
+            return text
+        except Exception as e:
+            logger.error(f"Error reading PDF: {e}")
+            return "" 
+
+    elif filename.endswith(".docx"):
+        # docx2txt requires a file path. Use a safe temporary file guaranteed to be deleted.
+        with tempfile.NamedTemporaryFile(delete=True, suffix=".docx") as tmp_file:
+            tmp_file.write(file_storage.read())
+            tmp_file.flush()
+            try:
+                return docx2txt.process(tmp_file.name)
+            except Exception as e:
+                logger.error(f"Error reading DOCX: {e}")
+                return ""
+    
     return ""
 
 
@@ -113,27 +154,32 @@ def recommend_next_two_skills(resume_text: str, role: str) -> list:
     """Return the next two missing skills for the chosen role."""
     ordered = job_skills.get(role, [])
     resume_words = set(preprocess_text(resume_text).split())
-    missing = [s for s in ordered if s.lower() not in resume_words]
+    # Filter for skills not found in the resume text
+    missing = [s for s in ordered if preprocess_text(s) not in resume_words]
     return missing[:2]
 
 
 def match_resume(resume_text: str) -> tuple:
     """Return (best_role, next_two_skills, other_roles[2])."""
-    # Build descriptions from ordered skills for vectorization
     role_names = list(job_skills.keys())
-    role_descs = [preprocess_text(", ".join(job_skills[r])) for r in role_names]
+    # Build descriptions by joining skills, separated by a unique token for better vectorization
+    role_descs = [preprocess_text(" ".join(job_skills[r])) for r in role_names]
 
+    # Create a vectorizer instance on every call (necessary since the input corpus changes)
     vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1, 2))
+    
+    # Fit and transform the resume and all job descriptions
     vectors = vectorizer.fit_transform([preprocess_text(resume_text)] + role_descs)
 
     resume_vec = vectors[0]
     job_vecs = vectors[1:]
 
+    # Calculate similarity scores
     cos_scores = cosine_similarity(resume_vec, job_vecs)[0]
     best_idx = int(cos_scores.argmax())
     best_role = role_names[best_idx]
 
-    # Other top 2 roles (excluding best)
+    # Find the next two top roles
     other_idxs = cos_scores.argsort()[::-1]
     other_roles = [role_names[i] for i in other_idxs if i != best_idx][:2]
 
@@ -150,28 +196,32 @@ def check_resume():
         return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files['resume']
-    os.makedirs("temp_upload", exist_ok=True)
-    file_path = os.path.join("temp_upload", file.filename)
-    file.save(file_path)
-
-    resume_text = extract_file(file_path)
-    try:
-        os.remove(file_path)
-    except Exception:
-        pass
+    
+    # Securely extract content
+    resume_text = extract_file_content(file)
 
     if not resume_text:
-        return jsonify({"error": "Unsupported file type or empty file"}), 400
+        return jsonify({"error": "Unsupported file type, corrupt file, or empty content"}), 400
 
-    best_role, next_two, other_roles = match_resume(resume_text)
+    # Analyze
+    try:
+        best_role, next_two, other_roles = match_resume(resume_text)
+    except Exception as e:
+        logger.error(f"Analysis failed: {e}")
+        return jsonify({"error": "Analysis failed due to internal error."}), 500
 
+    # Return results
     return jsonify({
         "best_role": best_role,
-        "recommend_next": next_two,  # up to 2 skills
+        "recommend_next": next_two,
         "other_roles": other_roles
     })
 
 
 if __name__ == "__main__":
-    # Run on 0.0.0.0 so your React frontend can reach it
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    # --- Local Development Run Command ---
+    # In production, this block is ignored, and a WSGI server (like Gunicorn) is used.
+    # To run locally: python app.py
+    port = int(os.environ.get("PORT", 5001))
+    logger.info(f"Starting Flask app on 0.0.0.0:{port}")
+    app.run(host="0.0.0.0", port=port)

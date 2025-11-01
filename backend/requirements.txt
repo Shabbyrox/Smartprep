@@ -15,5 +15,5 @@ PyPDF2
 scikit-learn
 numpy
 scipy
-
+gunicorn
 python-multipart
